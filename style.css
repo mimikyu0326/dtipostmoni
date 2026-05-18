@@ -59,6 +59,7 @@ body { font-family: 'Inter', sans-serif; background: var(--light-bg); color: var
 .toast-success { border-left-color: var(--success); } .toast-success i { color: var(--success); font-size: 20px;}
 .toast-error { border-left-color: var(--danger); } .toast-error i { color: var(--danger); font-size: 20px;}
 .toast-warning { border-left-color: var(--warning); } .toast-warning i { color: var(--warning); font-size: 20px;}
+.toast-info { border-left-color: var(--primary); } .toast-info i { color: var(--primary); font-size: 20px;}
 @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 .confirm-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease forwards; }
@@ -281,6 +282,14 @@ tbody tr:hover td { background: rgba(14, 165, 233, 0.03); }
     .cal-indicator { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cal-front, .cal-back { padding: 4px; }
 }
+
+/* Login Overlay */
+.login-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--dark); z-index: 20000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.login-box { background: var(--light); padding: 40px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; box-shadow: var(--shadow-lg); text-align: center; color: var(--text); border: 1px solid var(--border); animation: fadeInUp 0.5s ease; }
+.login-logo { width: 80px; height: 80px; margin-bottom: 20px; background: white; border-radius: 50%; padding: 5px; box-shadow: var(--shadow); }
+.login-box h2 { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--primary); }
+.login-box p { color: var(--text-light); margin-bottom: 30px; font-size: 14px; }
+.login-box .form-group { margin-bottom: 25px; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--light-bg); }

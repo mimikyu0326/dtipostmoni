@@ -27,12 +27,43 @@ let currentPage = 'home';
 let currentCalDate = new Date();
 
 document.addEventListener('DOMContentLoaded', function() {
+    initAuth();
     initNavigation();
     initEventListeners();
     setDefaultDate();
     toggleEntryType(); 
     initFirebase();
 });
+
+function initAuth() {
+    const isAuth = sessionStorage.getItem('systemUnlocked');
+    if (isAuth === 'true') {
+        document.getElementById('loginOverlay').style.display = 'none';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const pass = document.getElementById('systemPassword').value;
+        if (pass === 'post123') {
+            sessionStorage.setItem('systemUnlocked', 'true');
+            document.getElementById('loginOverlay').style.display = 'none';
+            showToast('System Unlocked. Welcome back!', 'success');
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+            document.getElementById('systemPassword').value = '';
+            setTimeout(() => {
+                document.getElementById('loginError').style.display = 'none';
+            }, 3000);
+        }
+    });
+}
+
+function logout() {
+    sessionStorage.removeItem('systemUnlocked');
+    document.getElementById('systemPassword').value = '';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    showToast('Logged out successfully.', 'info');
+}
 
 function parseFirebaseArray(data) {
     if (!data) return [];
@@ -147,6 +178,11 @@ function initEventListeners() {
         e.preventDefault();
         saveName();
     });
+
+    const btnPrint = document.getElementById('btnPrintData');
+    if (btnPrint) {
+        btnPrint.addEventListener('click', printDatabase);
+    }
 }
 
 function clearPreview() {
@@ -843,50 +879,79 @@ function addEntryToPreview(entry) {
 // ========================================
 // Database & Bulk Delete (No Matrix)
 // ========================================
-function renderDatabase() { applyFilters(); }
+function renderDatabase() { 
+    populateDatabaseLegend();
+    applyFilters(); 
+}
 
 function populateDatabaseLegend() {
     const legendDiv = document.getElementById('matrixLegend');
-    legendDiv.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 10px; color: var(--text);">Color Legend for Database:</div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="background: #10b981; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
-                <div>
-                    <strong style="color: var(--text);">Post Like (Reacted):</strong>
-                    <div style="font-size: 12px; color: var(--text-light);">Green indicates the person has reacted to the post.</div>
+    const selectedType = document.getElementById('filterEntryType').value;
+    
+    let html = '';
+    
+    // Show Like Legend
+    if (!selectedType || selectedType === 'Post Like') {
+        html += `
+            <div style="margin-bottom: 20px;">
+                <div style="font-weight: bold; margin-bottom: 10px; color: var(--text); font-size: 14px; border-bottom: 2px solid var(--primary); padding-bottom: 8px;">
+                    <i class="fas fa-thumbs-up" style="color: #10b981; margin-right: 8px;"></i>Post Like Color Legend
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="background: #10b981; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                        <div>
+                            <strong style="color: var(--text);">Reacted (Green):</strong>
+                            <div style="font-size: 12px; color: var(--text-light);">Person has reacted to the post.</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="background: #ef4444; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                        <div>
+                            <strong style="color: var(--text);">Not Reacted (Red):</strong>
+                            <div style="font-size: 12px; color: var(--text-light);">Person has not reacted to the post.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="background: #ef4444; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
-                <div>
-                    <strong style="color: var(--text);">Post Like (Not Reacted):</strong>
-                    <div style="font-size: 12px; color: var(--text-light);">Red indicates the person has not reacted to the post.</div>
+        `;
+    }
+    
+    // Show Share Legend
+    if (!selectedType || selectedType === 'Post Share') {
+        html += `
+            <div>
+                <div style="font-weight: bold; margin-bottom: 10px; color: var(--text); font-size: 14px; border-bottom: 2px solid #f59e0b; padding-bottom: 8px;">
+                    <i class="fas fa-share" style="color: #f59e0b; margin-right: 8px;"></i>Post Share Color Legend
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="background: #10b981; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                        <div>
+                            <strong style="color: var(--text);">Same Day (Green):</strong>
+                            <div style="font-size: 12px; color: var(--text-light);">Share posted on the same day as the original post.</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="background: #0ea5e9; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                        <div>
+                            <strong style="color: var(--text);">1-5 Days Later (Blue):</strong>
+                            <div style="font-size: 12px; color: var(--text-light);">Share posted 1-5 days after the original post.</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="background: #ef4444; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                        <div>
+                            <strong style="color: var(--text);">More than 5 Days (Red):</strong>
+                            <div style="font-size: 12px; color: var(--text-light);">Share posted more than 5 days after the original post.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="background: #10b981; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
-                <div>
-                    <strong style="color: var(--text);">Post Share (Same Day):</strong>
-                    <div style="font-size: 12px; color: var(--text-light);">Green indicates the share was posted on the same day as the original post.</div>
-                </div>
-            </div>
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="background: #0ea5e9; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
-                <div>
-                    <strong style="color: var(--text);">Post Share (1-5 Days Later):</strong>
-                    <div style="font-size: 12px; color: var(--text-light);">Blue indicates the share was posted 1-5 days after the original post.</div>
-                </div>
-            </div>
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="background: #ef4444; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
-                <div>
-                    <strong style="color: var(--text);">Post Share (More than 5 Days):</strong>
-                    <div style="font-size: 12px; color: var(--text-light);">Red indicates the share was posted more than 5 days after the original post.</div>
-                </div>
-            </div>
-        </div>
-    `;
+        `;
+    }
+    
+    legendDiv.innerHTML = html;
 }
 
 function applyFilters() {
@@ -1228,46 +1293,130 @@ function saveEditedPost() {
 }
 
 function exportToExcel() {
-    const fMonth = document.getElementById('filterMonth').value;
-    const fYear = document.getElementById('filterYear').value;
-    const fType = document.getElementById('filterEntryType').value;
+    try {
+        const fMonth = document.getElementById('filterMonth').value;
+        const fYear = document.getElementById('filterYear').value;
+        const fType = document.getElementById('filterEntryType').value;
 
-    let filtered = entries.map((e, i) => e ? {...e, _originalIndex: i} : null).filter(e => e !== null);
-    if (fMonth) filtered = filtered.filter(e => e.month == fMonth);
-    if (fYear) filtered = filtered.filter(e => e.year == fYear);
-    if (fType) filtered = filtered.filter(e => e.entryType === fType);
+        let filtered = entries.map((e, i) => e ? {...e, _originalIndex: i} : null).filter(e => e !== null);
+        if (fMonth) filtered = filtered.filter(e => e.month == fMonth);
+        if (fYear) filtered = filtered.filter(e => e.year == fYear);
+        if (fType) filtered = filtered.filter(e => e.entryType === fType);
 
-    if (filtered.length === 0) return;
-
-    const merged = mergeEntries(filtered);
-    merged.sort((a, b) => new Date(a.date) - new Date(b.date)); 
-    
-    let csv = 'Record Group,Date,Entry Type,Post Caption,Link,Names,Remarks\n';
-    merged.forEach(e => {
-        let ns = '';
-        if (e.entryType === 'Post Like') {
-            const targetCategory = e.category || 'Default';
-            ns = masterNames.map((n, i) => {
-                if (!n || (n.category || 'Default') !== targetCategory) return '';
-                if ((e.selectedNames || []).includes(i)) return `${n.alias || n.full} - Reacted`;
-                else return `${n.alias || n.full} - Not Reacting`;
-            }).filter(s=>s!=='').join('; ');
-        } else if (e.entryType === 'Post Share') {
-            ns = (e.selectedNames||[]).map(i=>{
-                const n=masterNames[i]; 
-                if(!n) return '';
-                let d = n.alias || n.full;
-                if(e.shareDates && e.shareDates[i]) d += ` (${e.shareDates[i]})`;
-                return d;
-            }).filter(n=>n).join('; ');
+        if (filtered.length === 0) {
+            showToast('No data to export. Please check your filters.', 'warning');
+            return;
         }
-        let cleanNS = ns.replace(/<\/?[^>]+(>|$)/g, "");
-        csv += `"${getMonthName(e.month)} ${e.year}","${e.date}","${e.entryType}","${e.title ? e.title.replace(/"/g, '""') : ''}","${e.link}","${cleanNS.replace(/"/g, '""')}","${e.remarks}"\n`;
-    });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.setAttribute('href', URL.createObjectURL(blob));
-    link.setAttribute('download', 'DTI_Monitoring_' + new Date().toISOString().split('T')[0] + '.csv');
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        const merged = mergeEntries(filtered);
+        merged.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        // Generate Summary Data
+        const likeCount = merged.filter(e => e.entryType === 'Post Like').length;
+        const shareCount = merged.filter(e => e.entryType === 'Post Share').length;
+        const dateRange = `${merged[0].date} to ${merged[merged.length - 1].date}`;
+        const exportTimestamp = new Date().toLocaleString();
+        
+        // Build CSV with better formatting
+        let csv = '';
+        
+        // Header with metadata
+        csv += 'DTI POST MONITORING DASHBOARD - EXPORT REPORT\n';
+        csv += `Export Date,${exportTimestamp}\n`;
+        csv += `Date Range,${dateRange}\n`;
+        csv += `Total Records,${merged.length}\n`;
+        csv += `Post Likes,${likeCount}\n`;
+        csv += `Post Shares,${shareCount}\n`;
+        csv += '\n\n';
+        
+        // Column headers
+        csv += 'Record Group,Date,Entry Type,Post Caption,Link,Names & Status,Remarks\n';
+        
+        // Data rows
+        merged.forEach((e, index) => {
+            let ns = '';
+            let statusSummary = '';
+            
+            if (e.entryType === 'Post Like') {
+                const targetCategory = e.category || 'Default';
+                const categoryNames = masterNames.map((n, i) => n ? {...n, originalIndex: i} : null)
+                    .filter(n => n !== null && (n.category || 'Default') === targetCategory);
+                
+                const reacted = categoryNames.filter(n => (e.selectedNames || []).includes(n.originalIndex));
+                const notReacted = categoryNames.filter(n => !(e.selectedNames || []).includes(n.originalIndex));
+                
+                ns = reacted.map(n => `${n.alias || n.full} ✓`).join('; ');
+                if (notReacted.length > 0) {
+                    if (ns) ns += '; ';
+                    ns += notReacted.map(n => `${n.alias || n.full} ✗`).join('; ');
+                }
+                statusSummary = `${reacted.length}/${categoryNames.length} Reacted`;
+            } else if (e.entryType === 'Post Share') {
+                const sharedList = (e.selectedNames||[]).map(i => {
+                    const n = masterNames[i]; 
+                    if (!n) return '';
+                    let d = n.alias || n.full;
+                    if (e.shareDates && e.shareDates[i]) {
+                        const sDate = e.shareDates[i];
+                        if (sDate !== "No Date") {
+                            let diffDays = Math.floor(Math.abs(new Date(sDate) - new Date(e.date)) / (1000 * 60 * 60 * 24));
+                            if (diffDays === 0) d += ` (${sDate}) - Same Day`;
+                            else if (diffDays >= 1 && diffDays <= 5) d += ` (${sDate}) - ${diffDays} days later`;
+                            else d += ` (${sDate}) - ${diffDays} days later`;
+                        } else {
+                            d += ' (No Date)';
+                        }
+                    }
+                    return d;
+                }).filter(n => n).join('; ');
+                
+                ns = sharedList || 'No shares recorded';
+                statusSummary = `${(e.selectedNames || []).length} shares`;
+            }
+            
+            let cleanNS = ns.replace(/<\/?[^>]+(>|$)/g, "");
+            let caption = e.title ? e.title.replace(/"/g, '""') : '';
+            let link = e.link ? e.link : '';
+            let remarks = e.remarks ? e.remarks.replace(/"/g, '""') : '';
+            
+            csv += `"${getMonthName(e.month)} ${e.year}","${e.date}","${e.entryType}","${caption}","${link}","${cleanNS.replace(/"/g, '""')}","${remarks} [${statusSummary}]"\n`;
+        });
+        
+        // Add footer with statistics
+        csv += '\n\n';
+        csv += 'Summary Statistics\n';
+        csv += `Total Posts Analyzed,${merged.length}\n`;
+        csv += `Like Entries,${likeCount}\n`;
+        csv += `Share Entries,${shareCount}\n`;
+        csv += `Master Names Used,${masterNames.filter(n => n).length}\n`;
+        csv += `Export Generated,${exportTimestamp}\n`;
+
+        // Create and download file
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.setAttribute('href', URL.createObjectURL(blob));
+        
+        const fileName = `DTI_Monitoring_${fType ? fType.replace(/\s+/g, '_') : 'All'}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute('download', fileName);
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success toast
+        showToast(`✓ Exported ${merged.length} record(s) successfully!`, 'success');
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Error during export. Please try again.', 'error');
+    }
 }
+
+function printDatabase() {
+    showToast('Preparing print view...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 500);
+}
+
+window.printDatabase = printDatabase;
