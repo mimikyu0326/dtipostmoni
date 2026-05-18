@@ -845,6 +845,50 @@ function addEntryToPreview(entry) {
 // ========================================
 function renderDatabase() { applyFilters(); }
 
+function populateDatabaseLegend() {
+    const legendDiv = document.getElementById('matrixLegend');
+    legendDiv.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 10px; color: var(--text);">Color Legend for Database:</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #10b981; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                <div>
+                    <strong style="color: var(--text);">Post Like (Reacted):</strong>
+                    <div style="font-size: 12px; color: var(--text-light);">Green indicates the person has reacted to the post.</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #ef4444; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                <div>
+                    <strong style="color: var(--text);">Post Like (Not Reacted):</strong>
+                    <div style="font-size: 12px; color: var(--text-light);">Red indicates the person has not reacted to the post.</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #10b981; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                <div>
+                    <strong style="color: var(--text);">Post Share (Same Day):</strong>
+                    <div style="font-size: 12px; color: var(--text-light);">Green indicates the share was posted on the same day as the original post.</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #0ea5e9; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                <div>
+                    <strong style="color: var(--text);">Post Share (1-5 Days Later):</strong>
+                    <div style="font-size: 12px; color: var(--text-light);">Blue indicates the share was posted 1-5 days after the original post.</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #ef4444; width: 20px; height: 20px; border-radius: 3px; flex-shrink: 0; margin-top: 2px;"></div>
+                <div>
+                    <strong style="color: var(--text);">Post Share (More than 5 Days):</strong>
+                    <div style="font-size: 12px; color: var(--text-light);">Red indicates the share was posted more than 5 days after the original post.</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function applyFilters() {
     const fMonth = document.getElementById('filterMonth').value;
     const fYear = document.getElementById('filterYear').value;
@@ -856,6 +900,7 @@ function applyFilters() {
     if (fType) filtered = filtered.filter(e => e.entryType === fType);
 
     updateDeleteButtonVisibility(); 
+    populateDatabaseLegend();
     renderPerMonthView(filtered);
 }
 
